@@ -1,66 +1,52 @@
-const API_URL = "https://qx5ntmlkql.execute-api.us-east-1.amazonaws.com/dev/costs"; // Replace with your deployed AWS API Gateway endpoint
+const API_BASE = "https://qx5ntmlkql.execute-api.us-east-1.amazonaws.com/dev";
+const COST_URL = `${API_BASE}/costs`;
+const HISTORY_URL = `${API_BASE}/history`;
 let chart;
 
-// Fetch and display AWS cost data
 async function fetchCostData() {
   const display = document.getElementById("data-display");
-  const button = document.getElementById("refresh-btn");
-  const ctx = document.getElementById("costChart").getContext("2d");
-
-  display.innerHTML = "<p>Fetching latest cost data...</p>";
-  button.disabled = true;
+  display.innerHTML = "Fetching latest cost data...";
 
   try {
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error("API Error");
-    const data = await response.json();
+    const [costRes, historyRes] = await Promise.all([
+      fetch(COST_URL),
+      fetch(HISTORY_URL)
+    ]);
 
-    // If Lambda returns only one day
-    if (!data.history) {
-      display.innerHTML = `
-        <h3>📅 Date: ${data.date}</h3>
-        <h2>💰 Total Cost: $${parseFloat(data.cost).toFixed(2)}</h2>
-      `;
-      if (chart) chart.destroy();
-      return;
-    }
+    const costData = await costRes.json();
+    const historyData = await historyRes.json();
 
-    // For multiple days (chart view)
-    const dates = data.history.map(item => item.date);
-    const costs = data.history.map(item => parseFloat(item.cost).toFixed(2));
+    const latest = costData.cost?.toFixed(2) || "0.00";
+    display.innerHTML = `<h2>💰 Current Cost: $${latest}</h2>`;
 
-    display.innerHTML = `
-      <h2>💰 Latest Cost: $${costs[costs.length - 1]}</h2>
-      <p>Last updated: ${dates[dates.length - 1]}</p>
-    `;
-
-    if (chart) chart.destroy(); // Reset existing chart
-
-    chart = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: dates,
-        datasets: [{
-          label: "AWS Daily Cost ($)",
-          data: costs,
-          borderWidth: 2,
-          fill: false,
-          tension: 0.3
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true }
-        }
-      }
-    });
+    renderChart(historyData.history);
   } catch (err) {
     display.innerHTML = `<p style="color:red;">❌ Failed to fetch data: ${err.message}</p>`;
-  } finally {
-    button.disabled = false;
   }
 }
 
-document.getElementById("refresh-btn").addEventListener("click", fetchCostData);
+function renderChart(history) {
+  const ctx = document.getElementById("costChart").getContext("2d");
+  const labels = history.map(item => item.date);
+  const values = history.map(item => item.cost);
+
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "AWS Daily Cost ($)",
+          data: values,
+          borderWidth: 2,
+          tension: 0.3
+        }
+      ]
+    },
+    options: { scales: { y: { beginAtZero: true } } }
+  });
+}
+
 window.onload = fetchCostData;
+document.getElementById("refresh-btn").addEventListener("click", fetchCostData);
