@@ -1,25 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>AWS Cloud Expense Tracker</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>☁️ AWS Cloud Expense Tracker</h1>
+  <main class="wrapper">
+    <header>
+      <div class="logo">☁️</div>
+      <h1>AWS Cloud Expense Tracker</h1>
+    </header>
 
-    <div id="data-display" class="data-box">
-      <p>Fetching latest cost data...</p>
-    </div>
+    <section id="panel" class="panel">
+      <div id="data-display" class="data-box">
+        <p class="muted">Fetching latest cost data...</p>
+      </div>
 
-    <canvas id="costChart"></canvas>
+      <canvas id="costChart" height="120"></canvas>
 
-    <button id="refresh-btn" class="refresh-btn">🔄 Refresh Data</button>
-  </div>
+      <div class="controls">
+        <button id="refresh-btn" class="btn">🔄 Refresh Data</button>
+      </div>
+    </section>
 
-  <script src="app.js"></script>
+    <footer class="foot muted">Day 3 — Live demo</footer>
+  </main>
+
+  <script src="app.js" type="module"></script>
 </body>
 </html>
